@@ -16,7 +16,7 @@ class LiveCheckResponse:
     cover: Optional[str]  # 封面url
 
 
-class ChannelCheckError(Exception):
+class ChannelResolveError(Exception):
     pass
 
 
@@ -87,17 +87,20 @@ class BaseChannel(abc.ABC):
                 html_s = await resp.text(encoding='utf8')
             response = await self.resolve(html_s)
         except Exception as e:
+            # *** DEBUG ***
             import os
             from config import data_path
             from mirai.logger import Event as EventLogger
             with open(os.path.join(data_path, f'debug_{self.__class__.__name__}.html'), 'w', encoding='utf8') as f:
                 f.write(html_s)
             EventLogger.error(f'Saved to debug_{self.__class__.__name__}.html')
+            # *** DEBUG ***
 
-            raise ChannelCheckError(
-                f'Error while fetching channel information: {self.ch_name or self.cid}\n' +
-                '    File "{}", line {}\n'.format(e.__traceback__.tb_next.tb_frame.f_globals["__file__"],
-                                                  e.__traceback__.tb_next.tb_lineno) +
+            file = e.__traceback__.tb_next.tb_frame.f_globals["__file__"]
+            lineno = e.__traceback__.tb_next.tb_lineno
+            raise ChannelResolveError(
+                f'Error while fetching channel information: {self.ch_name or self.cid}\n'
+                f'    File "{file}", line {lineno}\n'
                 f'  {e.__class__.__name__}: {str(e)}'
             ) from e
 
