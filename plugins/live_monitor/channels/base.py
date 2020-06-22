@@ -88,12 +88,14 @@ class BaseChannel(abc.ABC):
             response = await self.resolve(html_s)
         except Exception as e:
             # *** DEBUG ***
-            import os
-            from config import data_path
-            from mirai.logger import Event as EventLogger
-            with open(os.path.join(data_path, f'debug_{self.__class__.__name__}.html'), 'w', encoding='utf8') as f:
-                f.write(html_s)
-            EventLogger.error(f'Saved to debug_{self.__class__.__name__}.html')
+            import asyncio
+            if not isinstance(e, asyncio.TimeoutError):
+                import os
+                from config import data_path
+                from mirai.logger import Event as EventLogger
+                with open(os.path.join(data_path, f'debug_{self.__class__.__name__}.html'), 'w', encoding='utf8') as f:
+                    f.write(html_s)
+                EventLogger.error(f'Saved to debug_{self.__class__.__name__}.html')
             # *** DEBUG ***
 
             file = e.__traceback__.tb_next.tb_frame.f_globals["__file__"]
